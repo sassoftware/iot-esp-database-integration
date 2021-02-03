@@ -1,0 +1,85 @@
+<project name="databaseconnectorazuresql" threads="1" pubsub="auto" heartbeat-interval="1">
+  <description><![CDATA[READ and Write to AZURE SQL DB]]></description>
+  <metadata>
+    <meta id="studioUploadedBy">viya_admin</meta>
+    <meta id="studioUploaded">1611717508446</meta>
+    <meta id="studioModifiedBy">viya_admin</meta>
+    <meta id="studioModified">1611813808170</meta>
+    <meta id="layout">{"cq1":{"Copy1":{"x":-185,"y":-445},"Copy2":{"x":55,"y":-440},"ReadDataFromDB":{"x":55,"y":-585},"ReadDataFromFile":{"x":-185,"y":-585}}}</meta>
+  </metadata>
+  <contqueries>
+    <contquery name="cq1">
+      <windows>
+        <window-source pubsub="true" insert-only="true" autogen-key="true" name="ReadDataFromFile">
+          <schema>
+            <fields>
+              <field name="id" type="int64" key="true"/>
+              <field name="Datetime" type="stamp"/>
+              <field name="Value" type="double"/>
+              <field name="Device_ID" type="string"/>
+              <field name="Sensor_ID" type="string"/>
+            </fields>
+          </schema>
+          <connectors>
+            <connector class="fs" name="New_Connector_1">
+              <properties>
+                <property name="type"><![CDATA[pub]]></property>
+                <property name="dateformat"><![CDATA[%d%b%Y:%H:%M:%S]]></property>
+                <property name="header"><![CDATA[1]]></property>
+                <property name="noautogenfield"><![CDATA[true]]></property>
+                <property name="addcsvopcode"><![CDATA[true]]></property>
+                <property name="addcsvflags"><![CDATA[normal]]></property>
+                <property name="fsname"><![CDATA[/mnt/data/test.csv]]></property>
+                <property name="fstype"><![CDATA[csv]]></property>
+              </properties>
+            </connector>
+          </connectors>
+        </window-source>
+        <window-copy pubsub="true" name="Copy1">
+          <retention type="bytime_sliding"><![CDATA[5 seconds]]></retention>
+          <connectors>
+            <connector class="db" name="AzureSqlDB">
+              <description><![CDATA[Connect to Sql Database on Azure]]></description>
+              <properties>
+                <property name="type"><![CDATA[sub]]></property>
+                <property name="ignoresqlerrors"><![CDATA[true]]></property>
+                <property name="pwdencrypted"><![CDATA[true]]></property>
+                <property name="snapshot"><![CDATA[false]]></property>
+                <property name="connectstring"><![CDATA[DSN=SQLServer;uid=mike;pwd=U2FsdGVkX1/75enW+hA6nXQmN2WNMIbvuLMixFHM9bE=;]]></property>
+                <property name="desttablename"><![CDATA[Sensors]]></property>
+              </properties>
+            </connector>
+          </connectors>
+        </window-copy>
+        <window-source pubsub="true" name="ReadDataFromDB">
+          <schema>
+            <fields>
+              <field name="id" type="int64" key="true"/>
+              <field name="Datetime" type="stamp"/>
+              <field name="Value" type="double"/>
+              <field name="Device_ID" type="string"/>
+              <field name="Sensor_ID" type="string"/>
+            </fields>
+          </schema>
+          <connectors>
+            <connector class="db" name="AzureSQL">
+              <properties>
+                <property name="type"><![CDATA[pub]]></property>
+                <property name="selectstatement"><![CDATA[select * from sensors]]></property>
+                <property name="pwdencrypted"><![CDATA[true]]></property>
+                <property name="connectstring"><![CDATA[DSN=SQLServer;uid=mike;pwd=U2FsdGVkX1/75enW+hA6nXQmN2WNMIbvuLMixFHM9bE=;]]></property>
+              </properties>
+            </connector>
+          </connectors>
+        </window-source>
+        <window-copy pubsub="true" name="Copy2">
+          <retention type="bytime_sliding"><![CDATA[10 seconds]]></retention>
+        </window-copy>
+      </windows>
+      <edges>
+        <edge source="ReadDataFromFile" target="Copy1"/>
+        <edge source="ReadDataFromDB" target="Copy2"/>
+      </edges>
+    </contquery>
+  </contqueries>
+</project>

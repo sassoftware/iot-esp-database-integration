@@ -1,0 +1,85 @@
+<project name="databaseconnectorazurepostgresql" threads="1" pubsub="auto" heartbeat-interval="1">
+  <description><![CDATA[READ and Write to AZURE PostgreSQL DB]]></description>
+  <metadata>
+    <meta id="studioUploadedBy">viya_admin</meta>
+    <meta id="studioUploaded">1611815646081</meta>
+    <meta id="studioModifiedBy">viya_admin</meta>
+    <meta id="studioModified">1611819472516</meta>
+    <meta id="layout">{"cq1":{"Copy1":{"x":-185,"y":-445},"Copy2":{"x":55,"y":-440},"ReadDataFromFile":{"x":-185,"y":-585},"ReadDataFromPostgreSqlDb":{"x":55,"y":-585}}}</meta>
+  </metadata>
+  <contqueries>
+    <contquery name="cq1">
+      <windows>
+        <window-source pubsub="true" insert-only="true" autogen-key="true" name="ReadDataFromFile">
+          <schema>
+            <fields>
+              <field name="id" type="int64" key="true"/>
+              <field name="Datetime" type="stamp"/>
+              <field name="Value" type="double"/>
+              <field name="Device_ID" type="string"/>
+              <field name="Sensor_ID" type="string"/>
+            </fields>
+          </schema>
+          <connectors>
+            <connector class="fs" name="New_Connector_1">
+              <properties>
+                <property name="type"><![CDATA[pub]]></property>
+                <property name="dateformat"><![CDATA[%d%b%Y:%H:%M:%S]]></property>
+                <property name="header"><![CDATA[1]]></property>
+                <property name="noautogenfield"><![CDATA[true]]></property>
+                <property name="addcsvopcode"><![CDATA[true]]></property>
+                <property name="addcsvflags"><![CDATA[normal]]></property>
+                <property name="fsname"><![CDATA[mnt/data/test.csv]]></property>
+                <property name="fstype"><![CDATA[csv]]></property>
+              </properties>
+            </connector>
+          </connectors>
+        </window-source>
+        <window-copy pubsub="true" name="Copy1">
+          <retention type="bycount_sliding"><![CDATA[100]]></retention>
+          <connectors>
+            <connector class="db" name="PostgreSqlDB">
+              <description><![CDATA[Connect to PostgresSql Database on Azure]]></description>
+              <properties>
+                <property name="type"><![CDATA[sub]]></property>
+                <property name="pwdencrypted"><![CDATA[true]]></property>
+                <property name="snapshot"><![CDATA[false]]></property>
+                <property name="connectstring"><![CDATA[DSN=PostgreSQL;uid=mike@test;pwd=U2FsdGVkX1/v47fgesbVUX0dhnOQNFTAJe0h/pt1ttE=;]]></property>
+                <property name="desttablename"><![CDATA[Sensors]]></property>
+              </properties>
+            </connector>
+          </connectors>
+        </window-copy>
+        <window-source pubsub="true" name="ReadDataFromPostgreSqlDb">
+          <description><![CDATA[Read data from PostgresSQL database on Azure]]></description>
+          <schema>
+            <fields>
+              <field name="id" type="int64" key="true"/>
+              <field name="Datetime" type="stamp"/>
+              <field name="Value" type="double"/>
+              <field name="Device_ID" type="string"/>
+              <field name="Sensor_ID" type="string"/>
+            </fields>
+          </schema>
+          <connectors>
+            <connector class="db" name="PostgreSQLAzure">
+              <properties>
+                <property name="type"><![CDATA[pub]]></property>
+                <property name="selectstatement"><![CDATA[Select * from Sensors]]></property>
+                <property name="pwdencrypted"><![CDATA[true]]></property>
+                <property name="connectstring"><![CDATA[DSN=PostgreSQL;uid=mike@test;pwd=U2FsdGVkX1/v47fgesbVUX0dhnOQNFTAJe0h/pt1ttE=;]]></property>
+              </properties>
+            </connector>
+          </connectors>
+        </window-source>
+        <window-copy pubsub="true" name="Copy2">
+          <retention type="bytime_sliding"><![CDATA[10 seconds]]></retention>
+        </window-copy>
+      </windows>
+      <edges>
+        <edge source="ReadDataFromFile" target="Copy1"/>
+        <edge source="ReadDataFromPostgreSqlDb" target="Copy2"/>
+      </edges>
+    </contquery>
+  </contqueries>
+</project>
